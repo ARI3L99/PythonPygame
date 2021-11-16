@@ -1,6 +1,8 @@
-import pygame,sys,time,random
+import pygame,sys,random, datetime
 from pygame.locals import *
-scale = 300
+from datetime import *
+import time
+scale = 500
 pygame.init()
 play_surface = pygame.display.set_mode((scale,scale))
 pygame.display.set_caption(f"Snake")
@@ -10,7 +12,15 @@ def food_spawn():
     y = random.randint(0,((scale/10)-1))*10
     spawn = [x,y]
     return spawn
-
+def obtener_tiempo_transcurrido_formateado(hora_inicio):
+    segundos_transcurridos= (datetime.now() - hora_inicio).total_seconds()
+    return segundos_a_segundos_minutos_y_horas(int(segundos_transcurridos))
+def segundos_a_segundos_minutos_y_horas(segundos):
+    horas = int(segundos / 60 / 60)
+    segundos -= horas*60*60
+    minutos = int(segundos/60)
+    segundos -= minutos*60
+    return f"{horas:02d}:{minutos:02d}:{segundos:02d}"
 def main():
     snake_pos = [100,50]
     snake_body = [[100,50], [90,50], [80,50]]
@@ -18,7 +28,8 @@ def main():
     change = direction
     food_pos = food_spawn()
     score = 0
-
+    hora_inicio = datetime.now()
+    cronometro = True
 
     run = True
     while run:
@@ -65,24 +76,28 @@ def main():
             #y se omite el corte de la ultima posicion mientras esté en contacto con la comida
         else: #sino
             snake_body.pop(-1) #corta la ultima posicion
-        #comprueba que no toque los bordes de la pantalla
+
         myfont = pygame.font.SysFont("monospace", 16)
         gameover = myfont.render("GAME OVER!", 1, (255, 255, 255))
 
+        # comprueba que no toque los bordes de la pantalla
         if snake_pos[0] >= scale or snake_pos[0] < 0:
             play_surface.blit(gameover,((scale/2)-50,(scale/2)-50))
             pygame.display.flip()
+            cronometro = False
             time.sleep(3)
             run = False
         if snake_pos[1] >= scale or snake_pos[1] < 0:
             play_surface.blit(gameover, ((scale / 2) - 50, (scale / 2) - 50))
             pygame.display.flip()
+            cronometro = False
             time.sleep(3)
             run = False
         #comprueba que no toque su cuerpo
         if snake_pos in snake_body[1:]:
             play_surface.blit(gameover, ((scale / 2) - (scale/10), (scale / 2) - (scale/10)))
             pygame.display.flip()
+            cronometro = False
             time.sleep(3)
             run = False
         play_surface.fill((0,0,0))
@@ -91,12 +106,13 @@ def main():
             pygame.draw.rect(play_surface,(200,200,200), pygame.Rect(pos[0],pos[1],10,10))
         #dibuja la comida
         pygame.draw.rect(play_surface,(200,0,0),pygame.Rect(food_pos[0],food_pos[1],10,10))
-
+        if cronometro:
+            chrono = obtener_tiempo_transcurrido_formateado(hora_inicio)
 
         scoretext = myfont.render("Score = " + str(score), 1, (255, 255, 255))
-
+        timetext  = myfont.render("Time = "+ str(chrono),1,(255,255,255))
         play_surface.blit(scoretext, (5, 10))
-
+        play_surface.blit(timetext,(5,25))
         pygame.display.flip()
         fps.tick(10)
 
